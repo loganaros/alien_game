@@ -1,6 +1,7 @@
 # Example file showing a circle moving on screen
 import pygame
 import random
+from alien import Alien
 
 # pygame setup
 pygame.init()
@@ -10,19 +11,20 @@ running = True
 dt = 0
 
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+player_vel = pygame.Vector2(0, 0)
 
 planets = []
 planet_radius = 50
-vertical_velocity, horizontal_velocity = 0, 0
 
-GRAVITY = 10
+aliens = Alien(pygame.Vector2(random.randint(0, screen.get_width()), random.randint(0, screen.get_height())))
+
+GRAVITY = 100000
 
 for i in range(10):
     planets.append(pygame.Vector2(random.randint(planet_radius, screen.get_width() - planet_radius), random.randint(planet_radius, screen.get_height() - planet_radius)))
 
 while running:
-    # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -34,25 +36,29 @@ while running:
 
     for planet in planets:
         pygame.draw.circle(screen, "grey", planet, planet_radius)
-        dist = ((planet.x - player_pos.x) ** 2) + ((planet.y - player_pos.y) ** 2)
-        if dist <= (planet_radius * 3) ** 2 and dist >= planet_radius ** 2:
-            vertical_velocity += (planet.y - player_pos.y) * dt * GRAVITY
-            horizontal_velocity += (planet.x - player_pos.x) * dt * GRAVITY
+        dist = planet.distance_to(player_pos)
+        direction = planet - player_pos
+        if dist <= (planet_radius * 3) and dist >= planet_radius:
+            direction = direction.normalize()
+            force = GRAVITY / dist
+            player_vel += direction * force * dt
+
+    pygame.draw.circle(screen, "purple", aliens.pos, 5)
+    aliens.update(player_pos, dt)
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_w]:
-        vertical_velocity -= 10
+        player_vel.y -= 1000 * dt
     if keys[pygame.K_s]:
-        vertical_velocity += 10
+        player_vel.y += 1000 * dt
     if keys[pygame.K_a]:
-        horizontal_velocity -= 10
+        player_vel.x -= 1000 * dt
     if keys[pygame.K_d]:
-        horizontal_velocity += 10
+        player_vel.x += 1000 * dt
 
     
     
-    player_pos.x += horizontal_velocity * dt
-    player_pos.y += vertical_velocity * dt
+    player_pos += player_vel * dt
 
     # flip() the display to put your work on screen
     pygame.display.flip()
