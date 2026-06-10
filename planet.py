@@ -14,7 +14,7 @@ class Planet:
         self.friendly = False
 
     def update(self, dt, distance_to_player, screen, camera):
-        if len(self.aliens) < 5:
+        if len(self.aliens) < 3:
             self.timer -= dt
             if self.timer <= 0:
                 self.aliens.append(Alien(self.pos, friendly=self.friendly))

@@ -59,7 +59,7 @@ class Alien:
         direction = target - self.pos
         if direction.length() > 0:
             direction = direction.normalize()
-            self.vel += direction * self.speed * dt
+            self.vel += direction * self.speed * dt * 1.5
         self.pos += self.vel
         self.separate(neighbors, dt)
         self.align(neighbors, dt)
