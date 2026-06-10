@@ -65,7 +65,7 @@ while running:
             player.vel += direction * force * dt
         elif dist < planet.radius:
             outward = (player.pos - planet.pos).normalize()
-            player.pos = planet.pos + outward
+            player.pos = planet.pos + outward * planet.radius
             player.vel = pygame.Vector2(0, 0) 
 
         for alien in planet.aliens:
