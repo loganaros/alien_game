@@ -13,7 +13,7 @@ class Planet:
         self.color = color
         self.friendly = False
 
-    def update(self, dt, distance_to_player):
+    def update(self, dt, distance_to_player, screen, camera):
         if len(self.aliens) < 5:
             self.timer -= dt
             if self.timer <= 0:
@@ -24,4 +24,6 @@ class Planet:
             self.capture_timer -= dt
             if self.capture_timer <= 0:
                 self.friendly = True
+
+        pygame.draw.rect(screen, "green", pygame.Rect(self.pos.x - 40 - camera.x, self.pos.y - 30 - camera.y, self.capture_timer * 10, 10))
         

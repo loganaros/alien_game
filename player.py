@@ -22,5 +22,5 @@ class Player:
     def update(self, dt):
         self.pos += self.vel * dt
 
-    def draw(self, screen):
-        pygame.draw.circle(screen, "white", self.pos, self.radius)
+    def draw(self, screen, camera):
+        pygame.draw.circle(screen, "white", self.pos - camera, self.radius)
