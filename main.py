@@ -36,6 +36,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    if player.health <= 0:
+        running = False
+
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("black")
 
@@ -61,7 +64,7 @@ while running:
         # affect gravity force on player towards planet if within certain radius that scales based on distance to planet
         if dist <= (planet.radius * 3) and dist >= planet.radius:
             direction = direction.normalize()
-            force = GRAVITY / dist
+            force = (GRAVITY / dist) * (planet.radius / 100)
             player.vel += direction * force * dt
         elif dist < planet.radius:
             outward = (player.pos - planet.pos).normalize()
@@ -77,10 +80,12 @@ while running:
             if planet.friendly:
                 alien.friendly = True
                 pygame.draw.circle(screen, "green", pygame.Vector2(alien.pos.x, alien.pos.y - 10) - camera, 3)
-                target = planet.pos
+                target = planet
             else:
                 pygame.draw.circle(screen, "red", pygame.Vector2(alien.pos.x, alien.pos.y - 10) - camera, 3)
-                target = player.pos
+                target = player
+                if target.pos.distance_to(alien.pos) <= player.radius + alien.radius:
+                    alien.attack(player, dt)
 
             alien.update(target, dt, planet.aliens)
 

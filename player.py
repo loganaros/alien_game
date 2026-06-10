@@ -4,6 +4,7 @@ class Player:
 
     thrust = 1000
     radius = 20
+    health = 100
 
     def __init__(self, pos, vel=None):
         self.pos = pygame.Vector2(pos)
@@ -24,3 +25,4 @@ class Player:
 
     def draw(self, screen, camera):
         pygame.draw.circle(screen, "white", self.pos - camera, self.radius)
+        pygame.draw.rect(screen, "green", pygame.Rect(self.pos.x - 50 - camera.x, self.pos.y - 50 - camera.y, self.health, 10))

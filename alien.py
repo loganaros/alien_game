@@ -2,18 +2,19 @@ import pygame
 
 class Alien:
 
-    separate_weight = 1
+    separate_weight = 1.3
     align_weight = .3
     cohesion_weight = .1
     max_speed = 10
 
     radius = 300
 
-    def __init__(self, pos, vel=None, friendly=False):
+    def __init__(self, pos, vel=None, friendly=False, damage=1):
         self.pos = pygame.Vector2(pos)
         self.vel = pygame.Vector2(vel) if vel is not None else pygame.Vector2(0, 0)
         self.speed = 10
         self.friendly = friendly
+        self.damage = damage
 
     def separate(self, neighbors, dt):
         for neighbor in neighbors:
@@ -48,15 +49,18 @@ class Alien:
             self.vel += (average_pos - self.pos) * dt * self.cohesion_weight
 
     def avoid(self, target, dt):
-        if self.pos.distance_to(target) < 40:
-            direction = self.pos - target
+        if self.pos.distance_to(target.pos) < target.radius + self.radius:
+            direction = self.pos - target.pos
             if direction.length() > 0:
                 direction = direction.normalize()
                 self.vel += direction * self.speed * dt * 10
 
+    def attack(self, player, dt):
+        player.health -= self.damage
+        self.vel += (self.pos - player.pos) * self.speed * dt * 10
 
     def update(self, target, dt, neighbors):
-        direction = target - self.pos
+        direction = target.pos - self.pos
         if direction.length() > 0:
             direction = direction.normalize()
             self.vel += direction * self.speed * dt * 1.5

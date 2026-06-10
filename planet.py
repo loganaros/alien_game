@@ -20,10 +20,10 @@ class Planet:
                 self.aliens.append(Alien(self.pos, friendly=self.friendly))
                 self.timer = 3
 
-        if distance_to_player <= 60 and not self.friendly:
+        if distance_to_player <= self.radius + 10 and not self.friendly:
             self.capture_timer -= dt
             if self.capture_timer <= 0:
                 self.friendly = True
 
-        pygame.draw.rect(screen, "green", pygame.Rect(self.pos.x - 40 - camera.x, self.pos.y - 30 - camera.y, self.capture_timer * 10, 10))
+        pygame.draw.rect(screen, "green", pygame.Rect(self.pos.x - 25 - camera.x, self.pos.y - 5 - camera.y, self.capture_timer * 10, 10))
         
