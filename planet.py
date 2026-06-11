@@ -17,7 +17,7 @@ class Planet:
         if len(self.aliens) < 3:
             self.timer -= dt
             if self.timer <= 0:
-                self.aliens.append(Alien(self.pos, friendly=self.friendly))
+                self.aliens.append(Alien(self.pos, radius=8, friendly=self.friendly))
                 self.timer = 3
 
         if distance_to_player <= self.radius + 10 and not self.friendly:

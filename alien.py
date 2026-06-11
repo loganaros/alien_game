@@ -7,10 +7,11 @@ class Alien:
     cohesion_weight = .1
     max_speed = 10
 
-    radius = 300
+    flock_radius = 300
 
-    def __init__(self, pos, vel=None, friendly=False, damage=1):
+    def __init__(self, pos, radius, vel=None, friendly=False, damage=10):
         self.pos = pygame.Vector2(pos)
+        self.radius = radius
         self.vel = pygame.Vector2(vel) if vel is not None else pygame.Vector2(0, 0)
         self.speed = 10
         self.friendly = friendly
@@ -18,7 +19,7 @@ class Alien:
 
     def separate(self, neighbors, dt):
         for neighbor in neighbors:
-            if self.pos.distance_to(neighbor.pos) < self.radius and neighbor != self:
+            if self.pos.distance_to(neighbor.pos) < self.flock_radius and neighbor != self:
                 direction = self.pos - neighbor.pos
                 if direction.length() > 0:
                     direction = direction.normalize()
@@ -28,7 +29,7 @@ class Alien:
         average_vel = pygame.Vector2(self.vel)
         count = 1
         for neighbor in neighbors:
-            if self.pos.distance_to(neighbor.pos) < self.radius and neighbor != self:
+            if self.pos.distance_to(neighbor.pos) < self.flock_radius and neighbor != self:
                 average_vel += neighbor.vel
                 count += 1
 
@@ -40,7 +41,7 @@ class Alien:
         average_pos = pygame.Vector2(self.pos)
         count = 1
         for neighbor in neighbors:
-            if self.pos.distance_to(neighbor.pos) < self.radius and neighbor != self:
+            if self.pos.distance_to(neighbor.pos) < self.flock_radius and neighbor != self:
                 average_pos += neighbor.pos
                 count += 1
         
@@ -56,14 +57,14 @@ class Alien:
                 self.vel += direction * self.speed * dt * 10
 
     def attack(self, player, dt):
-        player.health -= self.damage
-        self.vel += (self.pos - player.pos) * self.speed * dt * 10
+        player.health -= self.damage * dt
+        self.vel += (self.pos - player.pos) * self.speed * dt * 2
 
     def update(self, target, dt, neighbors):
         direction = target.pos - self.pos
         if direction.length() > 0:
             direction = direction.normalize()
-            self.vel += direction * self.speed * dt * 1.5
+            self.vel += direction * self.speed * dt * 2
         self.pos += self.vel
         self.separate(neighbors, dt)
         self.align(neighbors, dt)

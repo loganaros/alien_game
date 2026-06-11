@@ -18,11 +18,11 @@ player = Player((screen.get_width() / 2, screen.get_height() / 2))
 planets = []
 
 # set gravity constant
-GRAVITY = 100000
+GRAVITY = 100000 * .75
 
 # populate planets list with planets with random size, color and position and empty aliens list
 for i in range(5):
-    planet_radius = random.randint(50, 150)
+    planet_radius = random.randint(100, 500)
     color = pygame.Color(random.randint(122, 255), random.randint(122, 255), random.randint(122, 255))
     pos = pygame.Vector2(random.randint(-2000, 2000), random.randint(-2000, 2000))
     # aliens = [Alien(pos + pygame.Vector2(random.randint(-20, 20), random.randint(-20, 20)), pygame.Vector2(0,0)) for _ in range(5)]
@@ -46,13 +46,14 @@ while running:
     camera = player.pos - (screen.get_width() / 2, screen.get_height() / 2)
 
     # draw grid lines
-    for i in range(-2000, 2000, 100):
+    for i in range(-2000, 2100, 100):
         pygame.draw.line(screen, "white", pygame.Vector2(i, -2000) - camera, pygame.Vector2(i, 2000) - camera)
         pygame.draw.line(screen, "white", pygame.Vector2(-2000, i) - camera, pygame.Vector2(2000, i) - camera)
 
     # draw player centered on screen
     player.draw(screen, camera)
 
+    
     # loop through planets
     for planet in planets:
         pygame.draw.circle(screen, planet.color, planet.pos - camera, planet.radius)
@@ -72,7 +73,7 @@ while running:
             player.vel = pygame.Vector2(0, 0) 
 
         for alien in planet.aliens:
-            pygame.draw.circle(screen, planet.color, alien.pos - camera, 8)
+            pygame.draw.circle(screen, planet.color, alien.pos - camera, alien.radius)
             pygame.draw.line(screen, "white", alien.pos - camera, alien.pos + (alien.vel * 2) - camera)
             target = None
 
