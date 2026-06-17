@@ -56,7 +56,7 @@ while running:
     
     # loop through planets
     for planet in planets:
-        pygame.draw.circle(screen, planet.color, planet.pos - camera, planet.radius)
+        planet.draw(screen, camera)
 
         # get distance to and direction between player and planet
         dist = planet.pos.distance_to(player.pos)
@@ -73,20 +73,17 @@ while running:
             player.vel = pygame.Vector2(0, 0) 
 
         for alien in planet.aliens:
-            pygame.draw.circle(screen, planet.color, alien.pos - camera, alien.radius)
-            pygame.draw.line(screen, "white", alien.pos - camera, alien.pos + (alien.vel * 2) - camera)
             target = None
 
             # if the planet is friendly, all aliens from planet are friendly, target their home planet, otherwise target the player
             if planet.friendly:
-                alien.friendly = True
-                pygame.draw.circle(screen, "green", pygame.Vector2(alien.pos.x, alien.pos.y - 10) - camera, 3)
                 target = planet
             else:
-                pygame.draw.circle(screen, "red", pygame.Vector2(alien.pos.x, alien.pos.y - 10) - camera, 3)
                 target = player
                 if target.pos.distance_to(alien.pos) <= player.radius + alien.radius:
                     alien.attack(player, dt)
+
+            alien.draw(screen, camera, planet)
 
             alien.update(target, dt, planet.aliens)
 

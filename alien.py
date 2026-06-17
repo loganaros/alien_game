@@ -60,6 +60,13 @@ class Alien:
         player.health -= self.damage * dt
         self.vel += (self.pos - player.pos) * self.speed * dt * 2
 
+    def draw(self, screen, camera, planet):
+        pygame.draw.circle(screen, planet.color, self.pos - camera, self.radius)
+        pygame.draw.line(screen, "white", self.pos - camera, self.pos + (self.vel * 2) - camera)
+        marker_color = "green" if planet.friendly else "red"
+        pygame.draw.circle(screen, marker_color, pygame.Vector2(self.pos.x, self.pos.y - 10) - camera, 3)
+
+
     def update(self, target, dt, neighbors):
         direction = target.pos - self.pos
         if direction.length() > 0:

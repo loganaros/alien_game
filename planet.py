@@ -13,6 +13,10 @@ class Planet:
         self.color = color
         self.friendly = False
 
+    def draw(self, screen, camera):
+        pygame.draw.circle(screen, self.color, self.pos - camera, self.radius)
+
+
     def update(self, dt, distance_to_player, screen, camera):
         if len(self.aliens) < 3:
             self.timer -= dt
