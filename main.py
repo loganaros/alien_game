@@ -62,15 +62,9 @@ while running:
         if is_visible(camera, planet):
             planet.draw(screen, camera)
 
-        # get distance to and direction between player and planet
-        dist = planet.pos.distance_to(player.pos)
-        direction = planet.pos - player.pos
-
         # affect gravity force on player towards planet if within certain radius that scales based on distance to planet
-        if dist <= (planet.radius * 3) and dist >= planet.radius:
-            planet.apply_gravity(player, dt)
-        elif dist < planet.radius:
-            planet.resolve_collision(player)
+        planet.apply_gravity(player, dt)
+        planet.resolve_collision(player)
 
         for alien in planet.aliens:
             target = None
@@ -86,13 +80,13 @@ while running:
 
             alien.update(target, dt, planet.aliens)
 
-        planet.update(dt, dist, screen, camera)
+        planet.update(dt, player, screen, camera)
 
     # get input and send to player object
     keys = pygame.key.get_pressed()
     player.handle_input(keys, dt)
     player.update(dt)
-    
+
     if player.pos.x < LEFTBOUND or player.pos.x > RIGHTBOUND:
         player.vel.x = 0
         player.pos.x = max(LEFTBOUND, min(player.pos.x, RIGHTBOUND))

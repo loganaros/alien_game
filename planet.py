@@ -20,23 +20,27 @@ class Planet:
 
     def apply_gravity(self, target, dt):
         dist = self.pos.distance_to(target.pos)
-        direction = self.pos - target.pos
-        direction = direction.normalize()
-        force = (self.GRAVITY / dist) * (self.radius / 100)
-        target.vel += direction * force * dt
+        if dist <= (self.radius * 3) and dist >= self.radius > 0:
+            direction = self.pos - target.pos
+            direction = direction.normalize()
+            force = (self.GRAVITY / dist) * (self.radius / 100)
+            target.vel += direction * force * dt
 
     def resolve_collision(self, target):
-        outward = (target.pos - self.pos).normalize()
-        target.pos = self.pos + outward * self.radius
-        target.vel = pygame.Vector2(0, 0) 
+        dist = self.pos.distance_to(target.pos)
+        if dist < self.radius:
+            outward = (target.pos - self.pos).normalize()
+            target.pos = self.pos + outward * self.radius
+            target.vel = pygame.Vector2(0, 0) 
 
-    def update(self, dt, distance_to_player, screen, camera):
+    def update(self, dt, player, screen, camera):
         if len(self.aliens) < 3:
             self.timer -= dt
             if self.timer <= 0:
                 self.aliens.append(Alien(self.pos, radius=8, friendly=self.friendly))
                 self.timer = 3
 
+        distance_to_player = self.pos.distance_to(player.pos)
         if distance_to_player <= self.radius + 10 and not self.friendly:
             self.capture_timer -= dt
             if self.capture_timer <= 0:
