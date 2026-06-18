@@ -66,16 +66,20 @@ class Alien:
         marker_color = "green" if planet.friendly else "red"
         pygame.draw.circle(screen, marker_color, pygame.Vector2(self.pos.x, self.pos.y - 10) - camera, 3)
 
-
-    def update(self, target, dt, neighbors):
+    def follow(self, target, dt):
         direction = target.pos - self.pos
         if direction.length() > 0:
             direction = direction.normalize()
             self.vel += direction * self.speed * dt * 2
         self.pos += self.vel
+
+    def update(self, target, dt, neighbors):
+        self.follow(target, dt)
         self.separate(neighbors, dt)
         self.align(neighbors, dt)
         self.cohesion(neighbors, dt)
         self.avoid(target, dt)
         if self.vel.length() > self.max_speed:
             self.vel.scale_to_length(self.max_speed)
+        if not self.friendly and target.pos.distance_to(self.pos) <= target.radius + self.radius:
+            self.attack(target, dt)

@@ -5,6 +5,8 @@ class Planet:
     timer = 3
     capture_timer = 5
 
+    GRAVITY = 100000 * .75
+
     def __init__(self, pos, radius, id, aliens, color):
         self.pos = pygame.Vector2(pos)
         self.radius = radius
@@ -16,6 +18,17 @@ class Planet:
     def draw(self, screen, camera):
         pygame.draw.circle(screen, self.color, self.pos - camera, self.radius)
 
+    def apply_gravity(self, target, dt):
+        dist = self.pos.distance_to(target.pos)
+        direction = self.pos - target.pos
+        direction = direction.normalize()
+        force = (self.GRAVITY / dist) * (self.radius / 100)
+        target.vel += direction * force * dt
+
+    def resolve_collision(self, target):
+        outward = (target.pos - self.pos).normalize()
+        target.pos = self.pos + outward * self.radius
+        target.vel = pygame.Vector2(0, 0) 
 
     def update(self, dt, distance_to_player, screen, camera):
         if len(self.aliens) < 3:

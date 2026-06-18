@@ -11,23 +11,33 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-# create player object
 player = Player((screen.get_width() / 2, screen.get_height() / 2))
 
-# create empty list of planets
 planets = []
 
-# set gravity constant
-GRAVITY = 100000 * .75
+TOPBOUND, RIGHTBOUND, BOTTOMBOUND, LEFTBOUND = -2000, 2000, 2000, -2000
+
+def is_visible(camera, obj):
+    return (0 - obj.radius <= obj.pos.x - camera.x <= screen.get_width() + obj.radius) and (0 - obj.radius <= obj.pos.y - camera.y <= screen.get_height() + obj.radius)
 
 # populate planets list with planets with random size, color and position and empty aliens list
-for i in range(5):
-    planet_radius = random.randint(100, 500)
-    color = pygame.Color(random.randint(122, 255), random.randint(122, 255), random.randint(122, 255))
-    pos = pygame.Vector2(random.randint(-2000, 2000), random.randint(-2000, 2000))
-    # aliens = [Alien(pos + pygame.Vector2(random.randint(-20, 20), random.randint(-20, 20)), pygame.Vector2(0,0)) for _ in range(5)]
-    aliens = []
-    planets.append(Planet(pos, planet_radius, i, aliens, color))
+def initialize_planets(numPlanets):
+    for i in range(numPlanets):
+        planet_radius = random.randint(100, 500)
+        color = pygame.Color(random.randint(122, 255), random.randint(122, 255), random.randint(122, 255))
+        pos = pygame.Vector2(random.randint(LEFTBOUND, RIGHTBOUND), random.randint(TOPBOUND, BOTTOMBOUND))
+        aliens = []
+        planets.append(Planet(pos, planet_radius, i, aliens, color))
+
+def draw_grid(camera):
+    for i in range(LEFTBOUND, RIGHTBOUND + 100, 100):
+        if 0 <= i - camera.x <= screen.get_width():
+            pygame.draw.line(screen, "white", pygame.Vector2(i, TOPBOUND) - camera, pygame.Vector2(i, BOTTOMBOUND) - camera)
+    for i in range(TOPBOUND, BOTTOMBOUND + 100, 100):
+        if 0 <= i - camera.y <= screen.get_height():
+            pygame.draw.line(screen, "white", pygame.Vector2(LEFTBOUND, i) - camera, pygame.Vector2(RIGHTBOUND, i) - camera)
+
+initialize_planets(5)
 
 # main game loop
 while running:
@@ -39,24 +49,18 @@ while running:
     if player.health <= 0:
         running = False
 
-    # fill the screen with a color to wipe away anything from last frame
     screen.fill("black")
 
     # create camera vector centered around player object
     camera = player.pos - (screen.get_width() / 2, screen.get_height() / 2)
 
-    # draw grid lines
-    for i in range(-2000, 2100, 100):
-        pygame.draw.line(screen, "white", pygame.Vector2(i, -2000) - camera, pygame.Vector2(i, 2000) - camera)
-        pygame.draw.line(screen, "white", pygame.Vector2(-2000, i) - camera, pygame.Vector2(2000, i) - camera)
+    draw_grid(camera)
 
-    # draw player centered on screen
     player.draw(screen, camera)
-
     
-    # loop through planets
     for planet in planets:
-        planet.draw(screen, camera)
+        if is_visible(camera, planet):
+            planet.draw(screen, camera)
 
         # get distance to and direction between player and planet
         dist = planet.pos.distance_to(player.pos)
@@ -64,13 +68,9 @@ while running:
 
         # affect gravity force on player towards planet if within certain radius that scales based on distance to planet
         if dist <= (planet.radius * 3) and dist >= planet.radius:
-            direction = direction.normalize()
-            force = (GRAVITY / dist) * (planet.radius / 100)
-            player.vel += direction * force * dt
+            planet.apply_gravity(player, dt)
         elif dist < planet.radius:
-            outward = (player.pos - planet.pos).normalize()
-            player.pos = planet.pos + outward * planet.radius
-            player.vel = pygame.Vector2(0, 0) 
+            planet.resolve_collision(player)
 
         for alien in planet.aliens:
             target = None
@@ -80,10 +80,9 @@ while running:
                 target = planet
             else:
                 target = player
-                if target.pos.distance_to(alien.pos) <= player.radius + alien.radius:
-                    alien.attack(player, dt)
 
-            alien.draw(screen, camera, planet)
+            if is_visible(camera, alien):
+                alien.draw(screen, camera, planet)
 
             alien.update(target, dt, planet.aliens)
 
@@ -93,12 +92,13 @@ while running:
     keys = pygame.key.get_pressed()
     player.handle_input(keys, dt)
     player.update(dt)
-    if player.pos.x < -2000 or player.pos.x > 2000:
+    
+    if player.pos.x < LEFTBOUND or player.pos.x > RIGHTBOUND:
         player.vel.x = 0
-        player.pos.x = max(-2000, min(player.pos.x, 2000))
-    if player.pos.y < -2000 or player.pos.y > 2000:
+        player.pos.x = max(LEFTBOUND, min(player.pos.x, RIGHTBOUND))
+    if player.pos.y < TOPBOUND or player.pos.y > BOTTOMBOUND:
         player.vel.y = 0
-        player.pos.y = max(-2000, min(player.pos.y, 2000))
+        player.pos.y = max(TOPBOUND, min(player.pos.y, BOTTOMBOUND))
 
     pygame.display.flip()
 
