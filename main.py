@@ -1,6 +1,6 @@
 import pygame
 import random
-from alien import Alien
+# from alien import Alien
 from planet import Planet
 from player import Player
 
@@ -12,6 +12,14 @@ running = True
 dt = 0
 
 player = Player((screen.get_width() / 2, screen.get_height() / 2))
+
+alien_positions = []
+alien_velocities = []
+alien_friendly = []
+alien_homes = []
+
+alien_radius = 8
+alien_speed = 10
 
 planets = []
 
@@ -26,8 +34,7 @@ def initialize_planets(numPlanets):
         planet_radius = random.randint(100, 500)
         color = pygame.Color(random.randint(122, 255), random.randint(122, 255), random.randint(122, 255))
         pos = pygame.Vector2(random.randint(LEFTBOUND, RIGHTBOUND), random.randint(TOPBOUND, BOTTOMBOUND))
-        aliens = []
-        planets.append(Planet(pos, planet_radius, i, aliens, color))
+        planets.append(Planet(pos, planet_radius, i, color))
 
 def draw_grid(camera):
     for i in range(LEFTBOUND, RIGHTBOUND + 100, 100):
@@ -57,31 +64,38 @@ while running:
     draw_grid(camera)
 
     player.draw(screen, camera)
-    
+
     for planet in planets:
+        if alien_homes.count(planet.id) < 3:
+            planet.timer -= dt
+            if planet.timer <= 0:
+                alien_positions.append(pygame.Vector2(planet.pos))
+                alien_velocities.append(pygame.Vector2(0,0))
+                alien_friendly.append(planet.friendly)
+                alien_homes.append(planet.id)
+
+                planet.timer = 3
         if is_visible(camera, planet):
             planet.draw(screen, camera)
 
         # affect gravity force on player towards planet if within certain radius that scales based on distance to planet
         planet.apply_gravity(player, dt)
         planet.resolve_collision(player)
-
-        for alien in planet.aliens:
-            target = None
-
-            # if the planet is friendly, all aliens from planet are friendly, target their home planet, otherwise target the player
-            if planet.friendly:
-                target = planet
-            else:
-                target = player
-
-            if is_visible(camera, alien):
-                alien.draw(screen, camera, planet)
-
-            alien.update(target, dt, planet.aliens)
-
         planet.update(dt, player, screen, camera)
 
+    for i in range(len(alien_positions)):
+        pygame.draw.circle(screen, planets[alien_homes[i]].color, alien_positions[i] - camera, alien_radius)
+        pygame.draw.line(screen, "white", alien_positions[i] - camera, alien_positions[i] + (alien_velocities[i] * 2) - camera)
+        marker_color = "green" if alien_friendly[i] else "red"
+        pygame.draw.circle(screen, marker_color, pygame.Vector2(alien_positions[i].x, alien_positions[i].y - 10) - camera, 3)
+        direction = player.pos - alien_positions[i]
+        if direction.length() > 0:
+            direction = direction.normalize()
+            alien_velocities[i] += direction * alien_speed * dt * 2
+        alien_positions[i] += alien_velocities[i]
+        if alien_velocities[i].length() > alien_speed:
+            alien_velocities[i].scale_to_length(alien_speed)
+    
     # get input and send to player object
     keys = pygame.key.get_pressed()
     player.handle_input(keys, dt)
