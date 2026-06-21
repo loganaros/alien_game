@@ -44,6 +44,21 @@ def draw_grid(camera):
         if 0 <= i - camera.y <= screen.get_height():
             pygame.draw.line(screen, "white", pygame.Vector2(LEFTBOUND, i) - camera, pygame.Vector2(RIGHTBOUND, i) - camera)
 
+def update_aliens():
+    for i in range(len(alien_positions)):
+        pygame.draw.circle(screen, planets[alien_homes[i]].color, alien_positions[i] - camera, alien_radius)
+        pygame.draw.line(screen, "white", alien_positions[i] - camera, alien_positions[i] + (alien_velocities[i] * 2) - camera)
+        marker_color = "green" if alien_friendly[i] else "red"
+        pygame.draw.circle(screen, marker_color, pygame.Vector2(alien_positions[i].x, alien_positions[i].y - 10) - camera, 3)
+        direction = player.pos - alien_positions[i]
+        if direction.length() > 0:
+            direction = direction.normalize()
+            alien_velocities[i] += direction * alien_speed * dt * 2
+        alien_positions[i] += alien_velocities[i]
+        if alien_velocities[i].length() > alien_speed:
+            alien_velocities[i].scale_to_length(alien_speed)
+    
+
 initialize_planets(5)
 
 # main game loop
@@ -83,19 +98,8 @@ while running:
         planet.resolve_collision(player)
         planet.update(dt, player, screen, camera)
 
-    for i in range(len(alien_positions)):
-        pygame.draw.circle(screen, planets[alien_homes[i]].color, alien_positions[i] - camera, alien_radius)
-        pygame.draw.line(screen, "white", alien_positions[i] - camera, alien_positions[i] + (alien_velocities[i] * 2) - camera)
-        marker_color = "green" if alien_friendly[i] else "red"
-        pygame.draw.circle(screen, marker_color, pygame.Vector2(alien_positions[i].x, alien_positions[i].y - 10) - camera, 3)
-        direction = player.pos - alien_positions[i]
-        if direction.length() > 0:
-            direction = direction.normalize()
-            alien_velocities[i] += direction * alien_speed * dt * 2
-        alien_positions[i] += alien_velocities[i]
-        if alien_velocities[i].length() > alien_speed:
-            alien_velocities[i].scale_to_length(alien_speed)
-    
+    update_aliens()
+
     # get input and send to player object
     keys = pygame.key.get_pressed()
     player.handle_input(keys, dt)
