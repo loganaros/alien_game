@@ -17,6 +17,10 @@ class Planet:
     def draw(self, screen, camera):
         pygame.draw.circle(screen, self.color, self.pos - camera, self.radius)
 
+    def draw_atmosphere(self, surf, camera):
+        pygame.draw.circle(surf, pygame.Color(255,0,255,128), self.pos - camera, self.radius * 3 + 3)
+        pygame.draw.circle(surf, pygame.Color(50,0,50,128), self.pos - camera, self.radius * 3)
+
     def apply_gravity(self, target, dt):
         dist = self.pos.distance_to(target.pos)
         if dist <= (self.radius * 3) and dist >= self.radius > 0:
