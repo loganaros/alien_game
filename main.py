@@ -81,6 +81,14 @@ def update_projectiles():
         projectile_positions.pop(j)
         projectile_velocities.pop(j)
 
+def check_bounds(player):
+    if player.pos.x < LEFTBOUND or player.pos.x > RIGHTBOUND:
+        player.vel.x = 0
+        player.pos.x = max(LEFTBOUND, min(player.pos.x, RIGHTBOUND))
+    if player.pos.y < TOPBOUND or player.pos.y > BOTTOMBOUND:
+        player.vel.y = 0
+        player.pos.y = max(TOPBOUND, min(player.pos.y, BOTTOMBOUND))
+
 initialize_planets(5)
 
 # main game loop
@@ -136,12 +144,7 @@ while running:
     player.handle_input(keys, dt)
     player.update(dt)
 
-    if player.pos.x < LEFTBOUND or player.pos.x > RIGHTBOUND:
-        player.vel.x = 0
-        player.pos.x = max(LEFTBOUND, min(player.pos.x, RIGHTBOUND))
-    if player.pos.y < TOPBOUND or player.pos.y > BOTTOMBOUND:
-        player.vel.y = 0
-        player.pos.y = max(TOPBOUND, min(player.pos.y, BOTTOMBOUND))
+    check_bounds(player)
 
     pygame.display.flip()
 
