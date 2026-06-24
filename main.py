@@ -49,6 +49,12 @@ def draw_grid(camera):
         if 0 <= i - camera.y <= screen.get_height():
             pygame.draw.line(screen, "white", pygame.Vector2(LEFTBOUND, i) - camera, pygame.Vector2(RIGHTBOUND, i) - camera)
 
+def add_alien(planet):
+    alien_positions.append(pygame.Vector2(planet.pos))
+    alien_velocities.append(pygame.Vector2(0,0))
+    alien_friendly.append(planet.friendly)
+    alien_homes.append(planet.id)
+
 def update_aliens():
     for i in range(len(alien_positions)):
         marker_color = "green" if alien_friendly[i] else "red"
@@ -63,7 +69,6 @@ def update_aliens():
         alien_positions[i] += alien_velocities[i]
         if alien_velocities[i].length() > alien_speed:
             alien_velocities[i].scale_to_length(alien_speed)
-    
 
 def update_projectiles():
     toRemove = set()
@@ -116,12 +121,9 @@ while running:
         if alien_homes.count(planet.id) < 3:
             planet.timer -= dt
             if planet.timer <= 0:
-                alien_positions.append(pygame.Vector2(planet.pos))
-                alien_velocities.append(pygame.Vector2(0,0))
-                alien_friendly.append(planet.friendly)
-                alien_homes.append(planet.id)
-
+                add_alien(planet)
                 planet.timer = 3
+
         if is_visible(camera, planet.pos, planet.radius * 3 + 3):
             planet.draw_atmosphere(surf, camera)
             planet.draw(screen, camera)
