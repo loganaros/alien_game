@@ -1,5 +1,6 @@
 import pygame
 import random
+import numpy as np
 # from alien import Alien
 from planet import Planet
 from player import Player
@@ -14,13 +15,13 @@ dt = 0
 
 player = Player((screen.get_width() / 2, screen.get_height() / 2))
 
-alien_positions = []
-alien_velocities = []
-alien_friendly = []
-alien_homes = []
+alien_positions = np.zeros((0,2))
+alien_velocities = np.zeros((0,2))
+alien_friendly = np.zeros(0, dtype=bool)
+alien_homes = np.zeros(0, dtype=int)
 
-projectile_positions = []
-projectile_velocities = []
+projectile_positions = np.zeros((0,2))
+projectile_velocities = np.zeros((0,2))
 
 alien_radius = 8
 alien_speed = 10
@@ -50,36 +51,58 @@ def draw_grid(camera):
             pygame.draw.line(screen, "white", pygame.Vector2(LEFTBOUND, i) - camera, pygame.Vector2(RIGHTBOUND, i) - camera)
 
 def update_aliens():
+    global alien_positions, alien_velocities
+
     for i in range(len(alien_positions)):
         marker_color = "green" if alien_friendly[i] else "red"
-        if is_visible(camera, alien_positions[i], alien_radius):
+        if is_visible(camera, pygame.Vector2(alien_positions[i][0], alien_positions[i][1]), alien_radius):
             pygame.draw.circle(screen, planets[alien_homes[i]].color, alien_positions[i] - camera, alien_radius)
             pygame.draw.line(screen, "white", alien_positions[i] - camera, alien_positions[i] + (alien_velocities[i] * 2) - camera)
-            pygame.draw.circle(screen, marker_color, pygame.Vector2(alien_positions[i].x, alien_positions[i].y - 10) - camera, 3)
-        direction = player.pos - alien_positions[i]
-        if direction.length() > 0:
-            direction = direction.normalize()
-            alien_velocities[i] += direction * alien_speed * dt * 2
-        alien_positions[i] += alien_velocities[i]
-        if alien_velocities[i].length() > alien_speed:
-            alien_velocities[i].scale_to_length(alien_speed)
+            pygame.draw.circle(screen, marker_color, pygame.Vector2(alien_positions[i][0], alien_positions[i][1] - 10) - camera, 3)
+
+    directions = player.pos - alien_positions
+    normalized_values = np.linalg.norm(directions, axis=1, keepdims=True)
+    normalized_values[normalized_values == 0] = 1
+    directions /= normalized_values
+    alien_velocities += directions * alien_speed * dt * 2
+    alien_positions += alien_velocities
+
+
+    # for i in range(len(alien_positions)):
+    #     direction = player.pos - alien_positions[i]
+    #     if direction.length() > 0:
+    #         direction = direction.normalize()
+    #         alien_velocities[i] += direction * alien_speed * dt * 2
+    #     alien_positions[i] += alien_velocities[i]
+    #     if alien_velocities[i].length() > alien_speed:
+    #         alien_velocities[i].scale_to_length(alien_speed)
     
 
 def update_projectiles():
-    toRemove = set()
-    for i in range(len(projectile_velocities)):
-        if is_visible(camera, projectile_positions[i], projectile_speed):
-            pygame.draw.line(screen, "red", projectile_positions[i] - projectile_velocities[i] * projectile_speed - camera, projectile_positions[i] + projectile_velocities[i] * projectile_speed - camera, 2)
-        projectile_positions[i] += projectile_velocities[i] * projectile_speed * dt * 100
-        
-        if projectile_positions[i][0] < LEFTBOUND or projectile_positions[i][0] > RIGHTBOUND:
-            toRemove.add(i)
-        if projectile_positions[i][1] < TOPBOUND or projectile_positions[i][1] > BOTTOMBOUND:
-            toRemove.add(i)
+    global projectile_velocities, projectile_positions
 
-    for j in sorted(toRemove, reverse=True):
-        projectile_positions.pop(j)
-        projectile_velocities.pop(j)
+    x = projectile_positions[:, 0]
+    y = projectile_positions[:, 1]
+
+    toRemove = set()
+
+    for i in range(len(projectile_velocities)):
+        pygame.draw.line(screen, "red", projectile_positions[i] - projectile_velocities[i] * projectile_speed - camera, projectile_positions[i] + projectile_velocities[i] * projectile_speed - camera, 2)
+
+    projectile_positions += projectile_velocities * projectile_speed * dt * 100
+    
+    # for i in range(len(projectile_velocities)):
+    #     if is_visible(camera, projectile_positions[i], projectile_speed):
+    #     projectile_positions[i] += projectile_velocities[i] * projectile_speed * dt * 100
+        
+    #     if projectile_positions[i][0] < LEFTBOUND or projectile_positions[i][0] > RIGHTBOUND:
+    #         toRemove.add(i)
+    #     if projectile_positions[i][1] < TOPBOUND or projectile_positions[i][1] > BOTTOMBOUND:
+    #         toRemove.add(i)
+
+    # for j in sorted(toRemove, reverse=True):
+    #     projectile_positions.pop(j)
+    #     projectile_velocities.pop(j)
 
 def check_bounds(player):
     if player.pos.x < LEFTBOUND or player.pos.x > RIGHTBOUND:
@@ -101,8 +124,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
-            projectile_positions.append(pygame.Vector2(player.pos))
-            projectile_velocities.append((event.pos - projectile_positions[-1] + camera).normalize())
+            projectile_positions = np.vstack([projectile_positions, [player.pos.x, player.pos.y]])
+
+            x, y = event.pos
+
+            direction = np.array([x - player.pos.x + camera.x, y - player.pos.y + camera.y])
+            normalized_direction = np.linalg.norm(direction)
+            if normalized_direction > 0:
+                direction /= normalized_direction
+            projectile_velocities = np.vstack([projectile_velocities, direction])
 
     if player.health <= 0:
         running = False
@@ -113,13 +143,13 @@ while running:
     draw_grid(camera)
 
     for planet in planets:
-        if alien_homes.count(planet.id) < 3:
+        if np.sum(alien_homes == planet.id) < 3:
             planet.timer -= dt
             if planet.timer <= 0:
-                alien_positions.append(pygame.Vector2(planet.pos))
-                alien_velocities.append(pygame.Vector2(0,0))
-                alien_friendly.append(planet.friendly)
-                alien_homes.append(planet.id)
+                alien_positions = np.vstack([alien_positions, [planet.pos.x, planet.pos.y]])
+                alien_velocities = np.vstack([alien_velocities, [0,0]])
+                alien_friendly = np.append(alien_friendly, planet.friendly)
+                alien_homes = np.append(alien_homes, planet.id)
 
                 planet.timer = 3
         if is_visible(camera, planet.pos, planet.radius * 3 + 3):
