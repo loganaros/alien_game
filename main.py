@@ -72,19 +72,33 @@ def update_aliens():
 
 def update_projectiles():
     toRemove = set()
+    aliensToKill = set()
+
     for i in range(len(projectile_velocities)):
         if is_visible(camera, projectile_positions[i], projectile_speed):
             pygame.draw.line(screen, "red", projectile_positions[i] - projectile_velocities[i] * projectile_speed - camera, projectile_positions[i] + projectile_velocities[i] * projectile_speed - camera, 2)
         projectile_positions[i] += projectile_velocities[i] * projectile_speed * dt * 100
+
+        for j in range(len(alien_positions)):
+            direction = projectile_positions[i] - alien_positions[j]
+            if direction.length() < alien_radius:
+                toRemove.add(i)
+                aliensToKill.add(j)
         
         if projectile_positions[i][0] < LEFTBOUND or projectile_positions[i][0] > RIGHTBOUND:
             toRemove.add(i)
         if projectile_positions[i][1] < TOPBOUND or projectile_positions[i][1] > BOTTOMBOUND:
             toRemove.add(i)
 
-    for j in sorted(toRemove, reverse=True):
-        projectile_positions.pop(j)
-        projectile_velocities.pop(j)
+    for k in sorted(toRemove, reverse=True):
+        projectile_positions.pop(k)
+        projectile_velocities.pop(k)
+
+    for l in sorted(aliensToKill, reverse=True):
+        alien_positions.pop(l)
+        alien_velocities.pop(l)
+        alien_friendly.pop(l)
+        alien_homes.pop(l)
 
 def check_bounds(player):
     if player.pos.x < LEFTBOUND or player.pos.x > RIGHTBOUND:
